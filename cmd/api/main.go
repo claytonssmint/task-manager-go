@@ -13,31 +13,31 @@ import (
 )
 
 func main() {
-	svr := server.New()
+	httpServer := server.NewHTTPServer(":8080")
 
-	// Rodar o servidor em goroutine
-	go func() {
-		log.Println("Servidor iniciado na porta 8080")
-		if err := svr.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("erro ao iniciar servidor: %v", err)
-		}
-	}()
-
-	//Canal para capturar sinais do sistema
+	// Canal para capturar sinais do SO
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
 
-	// Bloqueia até receber sinal
-	<-stop
-	log.Println("Recebido sinal de Shutdown, encerrando servidor...")
+	// Sobe o servidor em goroutine
+	go func() {
+		log.Println("🚀 Servidor rodando na porta 8080")
+		if err := httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("erro ao subir servidor: %v", err)
+		}
+	}()
 
-	// Contexto com timeout para finalizar requests
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	// Fica bloqueado esperando sinal
+	<-stop
+	log.Println("🛑 Encerrando servidor...")
+
+	// Contexto com timeout para finalizar requisições
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	if err := svr.Shutdown(ctx); err != nil {
-		log.Printf("erro no shutdown: %v", err)
-	} else {
-		log.Println("Servidor finalizado com sucesso")
+	if err := httpServer.Shutdown(ctx); err != nil {
+		log.Fatalf("erro no shutdown: %v", err)
 	}
+
+	log.Println("✅ Servidor encerrado com sucesso")
 }

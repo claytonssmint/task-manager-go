@@ -1,25 +1,23 @@
 package server
 
 import (
-	"log"
 	"net/http"
+	"time"
+
+	"github.com/claytonssmint/task-manager-go/internal/handlers"
 )
 
-func New() *http.Server {
+func NewHTTPServer(addr string) *http.Server {
 	mux := http.NewServeMux()
 
-	//health será registrado depois
-	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("OK"))
-	})
+	// rotas
+	mux.HandleFunc("/health", handlers.HealthHandler)
 
-	server := &http.Server{
-		Addr:    ":8080",
-		Handler: mux,
+	return &http.Server{
+		Addr:         addr,
+		Handler:      mux,
+		ReadTimeout:  10 * time.Second,
+		WriteTimeout: 10 * time.Second,
+		IdleTimeout:  60 * time.Second,
 	}
-
-	log.Println("HTTP server configurado na porta 8080")
-
-	return server
 }
